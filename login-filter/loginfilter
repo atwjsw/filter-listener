@@ -1,0 +1,12 @@
+1. 创建web.xml
+LoginFilter和Mapping
+LoginServlet和Mapping
+2. 创建LoginFilter类
+- 执行校验
+如果session有user直接放行，否则转到login页面。
+login成功后放入user
+- 成功放行
+- 失败返回Login页面
+3. 创建LoginServlet
+3. 创建登录页面
+4. 登录成功如何直接去到原来要求的页面？

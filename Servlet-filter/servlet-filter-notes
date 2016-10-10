@@ -1,0 +1,93 @@
+Servlet过滤器的原理
+
+定义：过滤器是一个服务器端的组件，它可以截取用户端的请求和响应信息，并对这些信息进行过滤。
+
+- 过滤源 ：http请求，不能直接处理请求，只是做一些辅助性的工作
+- 过滤规则
+- 过滤结果
+
+场景举例：
+- 安全保护：访问一个课程地址，登录前和登录后处理不同，登录前会显示一个登录界面，登录后直接到课程界面，就是过滤器在起作用
+- 错误处理：访问一个资源不存在，会转到错误页面
+
+servlet3.0都已经支持注解了，过滤器可以丝毫不用在web.xml里面配置，直接添加过滤器。
+@WebFilter(urlPatterns={"/*"})
+public class SystemFilter implements Filter {
+
+#工作原理
+- 过滤器在Web容器启动时加载
+- 用户请求先经过过滤器
+- 过滤器判断用户请求是否合法，符合过滤规则
+- 如果符合就发送web资源
+- web资源处理后返回过滤器，
+- 过滤器将web资源的响应发送给用户
+
+#过滤器生命周期
+Filter生命周期与Servlet相同
+- 实例化： 根据web.xml配置文件创建Filter对象，只执行一次
+- 初始化： 执行init()方法，完成一些初始化工作，读取参数等等，只执行一次
+- 过滤：执行doFilter方法，每次捕获请求都会执行，执行N次。
+- 销毁：执行destroy方法，web容器关闭的时候执行，只执行一次。
+
+#Filter的主要方法
+- init(): 过滤器的初始化方式，在这个方法中可以读取web.xml文件过滤器中的参数
+- doFilter(); 过滤操作。请求访问与过滤器关联的URL时，Web容器将先调用doFilter, Filter.chain参数可以调用chain.doFilter,
+将请求传给下游资源（或目标资源）， 或者用转发、重定向处理请求。
+- destroy(): 释放资源，一般用不到。
+
+我也觉得是过滤器技术上是可以直接返回数据，老师说的是它的设计理念吧。
+“response对象是HttpServletResponse，已经是访问的Web资源返回的响应数据”不是很理解。HttpServletResponse本质上是对客户端输出的一个接口，
+无论哪个类持有都可以对客户端输出的信息的。
+
+关于问题2：我也觉得是过滤器技术上是可以直接返回数据，老师说的是它的设计理念吧，不是不能，是不应该吧。过滤器持有HttpServletRequest和Response，可以进行跳转，处理，只是这样用不合适而已。
+
+另外就是Servlet过滤器实际工作中一般也不用的， 当然Struts的入口就是过滤器，只是拦截所有请求而已，其他工作都是Struts自己做了。SpringMVC入口直接就是Servlet，拦截所有请求。当时你可以在前面添加Servlet过滤器，但一般不会这样混用的。
+
+#过滤器链
+- 如果两个过滤器的url-pattern一致，将生产过滤器链
+- 服务器会按照web.xml中过滤器定义的先后顺序组装成一条链
+- 执行次序如下
+FirstFilter doFilter starts...
+SecondFilter doFilter starts...
+index.jsp完成处理
+SecondFilter doFilter ends...
+FirstFilter doFilter ends...
+
+#转发比重定向性能好
+
+#过滤器分类
+-REQUEST（默认）	:用户访问页面是会触发，最常用的。 包括重定向。
+-FORWARD: 目标资源是通过RequestDispatcher的forward访问时，该过滤器被调用。<jsp:forward>也是
+-INCLUDE：目标资源是通过RequestDispatcher的include访问时，该过滤器被调用。<jsp:include>也是
+-ERROR： 目标资源是通过声明式异常处理机制调用时，过滤器将被调用。
+-ASYNC：3.0开始增加
+
+这节主要是想说明：过滤器的触发是URL pattern 和 几种不同请求方式的组合的效果。大家记住一般就是用Request（默认值）， 
+也就是从客户端来的请求，其他的服务器内部的跳转（forward，include。。。）很少再去过滤了，都进到服务器里面啦，还过滤啥。
+
+- ERROR
+<error-page>
+  	<error-code>404</error-code>
+  	<location>/error404.jsp</location>
+</error-page>
+<filter>
+  	<filter-name>ErrorFilter</filter-name>
+  	<filter-class>com.atwjsw.filter.ErrorFilter</filter-class>  	
+  </filter>
+  <filter-mapping>
+  	<filter-name>ErrorFilter</filter-name>
+  	<url-pattern>/error404.jsp</url-pattern>
+  	<dispatcher>ERROR</dispatcher>  		
+</filter-mapping>
+
+-ASYNC
+有些后台处理需要较长时间，例如10分钟。从Servlet3.0起，filter支持异步处理，即通过创建一个线程去执行长时间的处理。
+并立即执行下面步骤。
+
+#Filter的5个应用场景
+- 对用户请求进行统一认证
+- 编码转换
+- 对请求数据进行过滤替换 （防注入、攻击）
+- 转换图像格式
+- 对响应的内容进行压缩
+

@@ -1,0 +1,51 @@
+监听器
+
+#现实中监听器的定义 - 是指专门用于对其他对象身上发生的事件或状态改变进行监听和相应处理的对象，
+当被监听的对象发生变化时，立即采取相应的行动。
+
+#Web监听器的概念
+- 举例说明：统计用户在线人数, 监听Session创建和销毁，对计数器进行加减
+Web应用服务器 -> 监听器 -> Sesion
+- 是Servlet规范定义的一种类
+- 监听对象： ServletContext， HttpSession, HttpRequest
+- 监听内容：以上三个对象的创建、销毁、以及属性的变化
+- 可以在事件发生前、发生后做一些必要的处理
+
+#应用场景
+- 统计在线人数和在线用户
+- 系统启动时加载初始化信息（缓存，公共的定时器，公共的数据库连接）
+- 统计网站访问量
+- 与Spring结合
+
+#监听器的开发步骤：
+1. 创建一个实现监听器接口的类
+public class FirstListener implements ServletContextListener
+
+2。 配置web.xm进行注册
+<listener>
+  	<listener-class>com.atwjsw.listener.FirstListener</listener-class>  	
+</listener>
+
+#监听器执行的顺序
+- web.xml中有多个监听器时，按照注册的次序执行
+- web.xml中有监听器、过滤器、Servlet时，按照监听器-》过滤器-》Servlet的顺序来启动
+
+#监听器的分类：
+- 按监听对象来分：ServletContext， HttpSession, ServletRequest
+- 按照监听的事件划分：1)监听对象自身的创建和销毁，2)监听对象中属性的增加和删除，3)监听绑定到HttpSession域中的某个对象的状态的
+事件监听器
+- 1)监听对象自身的创建和销毁: request, session, servletContext的create/init, destroy
+- 2)监听对象中属性的增加和删除: request, session, servletContext中attribute的add, replace, remove
+- 3）监听绑定到HttpSession域中的某个对象的状态的事件监听器： HttpSessionBindingListener， HttpSessionActivationListener
+第3的监听对象是JavaBean而不是session，request，servletContext
+
+#Tomcat的Session管理
+- 正常关闭和重启Tomcat服务器时，服务器会经Session对象钝化，即序列化写到磁盘或数据库上。
+- 这说明为什么正常重启Session还在
+
+#Servlet3.0下监听器的用法：
+@WebListener注解，实现listner接口
+
+#EL存取变量数据的方法很简单，例如：${username}。它的意思是取出某一范围中名称为username的变量。
+因为我们并没有指定哪一个范围的username，所以它会依序从Page、Request、Session、Application范围查找。
+假如途中找到username，就直接回传，不再继续找下去，但是假如全部的范围都没有找到时，就回传null。
